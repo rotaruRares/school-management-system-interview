@@ -37,7 +37,7 @@ npm install
 
 # Setup environment variables
 cp .env.example .env
-# Open .env and set JWT_SECRET (must be at least 32 characters, e.g., run: openssl rand -hex 32)
+### Open .env and set JWT_SECRET (must be at least 32 characters, e.g., run: openssl rand -hex 32)
 
 # Reset the database, apply migrations, and run the seeder in one step
 npx prisma migrate reset
