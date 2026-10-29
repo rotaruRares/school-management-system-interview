@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+enum Subject {
+  MATHEMATICS
+  ROMANIAN
+  ENGLISH
+  FRENCH
+  PHYSICS
+  CHEMISTRY
+  BIOLOGY
+  HISTORY
+  GEOGRAPHY
+  COMPUTER_SCIENCE
+  PHYSICAL_EDUCATION
+  MUSIC
+  ART
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique @db.VarChar(254)
+  passwordHash String   @db.VarChar(255)
+  role         Role
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  teacher       Teacher?
+  student       Student?
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model Teacher {
+  id        Int    @id @default(autoincrement())
+  userId    Int    @unique
+  firstName String @db.VarChar(100)
+  lastName  String @db.VarChar(100)
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classes Class[]
+  grades  Grade[]
+
+  @@map("teachers")
+}
+
+model Student {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @unique
+  classId     Int?
+  firstName   String   @db.VarChar(100)
+  lastName    String   @db.VarChar(100)
+  dateOfBirth DateTime @db.Date
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class  Class?  @relation(fields: [classId], references: [id], onDelete: SetNull)
+  grades Grade[]
+
+  @@index([classId])
+  @@map("students")
+}
+
+model Class {
+  id        Int    @id @default(autoincrement())
+  name      String @unique @db.VarChar(50)
+  teacherId Int?
+
+  teacher  Teacher?  @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+  students Student[]
+
+  @@index([teacherId])
+  @@map("classes")
+}
+
+model Grade {
+  id           Int      @id @default(autoincrement())
+  studentId    Int
+  teacherId    Int?
+  subject      Subject
+  numericGrade Int      @db.UnsignedTinyInt
+  date         DateTime @db.Date
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  student Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacher Teacher? @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+
+  @@index([studentId])
+  @@index([teacherId])
+  @@map("grades")
+}
+
+model RefreshToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  tokenHash String    @unique @db.Char(64)
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
